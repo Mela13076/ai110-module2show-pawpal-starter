@@ -29,7 +29,6 @@ owner.add_pet(pet2)
 # Generate and print today's schedule
 scheduler = Scheduler()
 plan, explanation = scheduler.generate_plan(owner)
-print(plan, explanation)
 
 print("=== PawPal+ Today's Schedule ===")
 total = 0
@@ -60,9 +59,40 @@ incomplete_tasks = scheduler.filter_by_completed(owner.get_all_tasks(), complete
 for task in incomplete_tasks:
     print(f"[#{task.number}] {task.description} (incomplete)")
 
-task1.mark_complete()
-
 print("\n=== Completed Tasks ===")
 completed_tasks = scheduler.filter_by_completed(owner.get_all_tasks(), completed=True)
 for task in completed_tasks:
     print(f"[#{task.number}] {task.description} (completed)")
+
+print("\n=== Mark Task Complete (Recurring) ===")
+daily_task = Task("Give vitamins", duration_minutes=2, priority=2, time=615, pet_name=pet1.name)
+weekly_task = Task("Brush coat", duration_minutes=8, priority=3, time=630, pet_name=pet1.name, frequency="weekly")
+monthly_task = Task("Weigh-in", duration_minutes=5, priority=2, time=645, pet_name=pet1.name, frequency="monthly")
+
+pet1.add_task(daily_task)
+pet1.add_task(weekly_task)
+pet1.add_task(monthly_task)
+
+print("Before:", [(t.description, t.due_date, t.completed) for t in pet1.get_tasks() if t.description in {"Give vitamins", "Brush coat", "Weigh-in"}])
+
+result_daily = scheduler.mark_task_complete(owner, daily_task.number)
+result_weekly = scheduler.mark_task_complete(owner, weekly_task.number)
+result_monthly = scheduler.mark_task_complete(owner, monthly_task.number)
+
+print("Mark daily:", result_daily)
+print("Mark weekly:", result_weekly)
+print("Mark monthly:", result_monthly)
+print("After:", [(t.description, t.due_date, t.completed) for t in pet1.get_tasks() if t.description in {"Give vitamins", "Brush coat", "Weigh-in"}])
+
+print("\n=== Detect Conflicts ===")
+conflict_task1 = Task("Short walk", duration_minutes=20, priority=3, time=560, pet_name=pet1.name)
+conflict_task2 = Task("Nail trim", duration_minutes=15, priority=3, time=570, pet_name=pet2.name)
+non_conflict_task = Task("Treats", duration_minutes=10, priority=1, time=590, pet_name=pet2.name)
+
+pet1.add_task(conflict_task1)
+pet2.add_task(conflict_task2)
+pet2.add_task(non_conflict_task)
+
+warnings = scheduler.detect_conflicts(owner.get_all_tasks())
+for warning in warnings:
+    print("-", warning)

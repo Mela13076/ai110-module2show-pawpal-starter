@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
-from typing import List, Tuple, ClassVar
+from typing import List, Tuple, ClassVar, Optional
+from datetime import date, timedelta
 
 @dataclass
 class Task:
@@ -8,10 +9,13 @@ class Task:
     priority:  int # scale of 1-5 (5 highest)
     time: int #minutes since midnight
     pet_name: str
-    frequency: str = "daily"
+    frequency: str = "daily" #daily, weekly, monthly
     completed: bool = False
+    due_date: date = field(default_factory=date.today)
+
     number: int = field(init=False)
     _counter: ClassVar[int] = 0 # class variable for unique numbering
+
 
     def __post_init__(self) -> None:
         #assign_number function called after init to assign unique number
@@ -73,7 +77,6 @@ class Owner:
 # Scheduling Logic
 # -------------------------
 
-@dataclass
 class Scheduler:
     def generate_plan(self, owner: Owner) -> Tuple[List[Task], List[str]]:
         """
@@ -114,3 +117,61 @@ class Scheduler:
     
     def filter_by_completed(self, tasks: List[Task], completed: bool) -> List[Task]:
         return [t for t in tasks if t.completed == completed]
+    
+    def mark_task_complete(self, owner: Owner, task_number: int) -> bool:
+        """
+        Marks a task complete by task_number.
+        If task is daily/weekly, creates the next occurrence and adds it to the same pet.
+        Returns True if the task was found and marked complete; otherwise False.
+        """
+        for pet in owner.pets:
+            for task in pet.tasks:
+                if task.number == task_number:
+                    task.mark_complete()
+
+                    # Create next occurrence for recurring tasks
+                    if task.frequency in ("daily", "weekly"):
+                        days = 1 if task.frequency == "daily" else 7
+                        next_due = task.due_date + timedelta(days=days)
+
+                        new_task = Task(
+                            description=task.description,
+                            duration_minutes=task.duration_minutes,
+                            priority=task.priority,
+                            time=task.time,
+                            pet_name=task.pet_name,
+                            frequency=task.frequency,
+                            completed=False,
+                            due_date=next_due,
+                        )
+                        pet.add_task(new_task)
+
+                    return True
+        return False
+    
+    def detect_conflicts(self, tasks: List[Task]) -> List[str]:
+        """
+        Lightweight conflict detection:
+        - Returns warning messages for overlapping tasks.
+        - Does NOT raise errors or stop the program.
+        """
+        warnings: List[str] = []
+
+        # Sort by start time so we only compare neighbors
+        tasks_sorted = sorted(tasks, key=lambda t: t.time)
+
+        for i in range(len(tasks_sorted) - 1):
+            current = tasks_sorted[i]
+            nxt = tasks_sorted[i + 1]
+
+            current_end = current.time + current.duration_minutes
+            next_start = nxt.time
+
+            # Overlap check
+            if next_start < current_end:
+                warnings.append(
+                    f"Time conflict: '{current.description}' ({current.pet_name}) "
+                    f"overlaps with '{nxt.description}' ({nxt.pet_name})."
+                )
+
+        return warnings

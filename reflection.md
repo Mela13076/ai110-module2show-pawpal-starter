@@ -39,6 +39,8 @@
 - Describe one tradeoff your scheduler makes.
 - Why is that tradeoff reasonable for this scenario?
 
+    - My detect_conflicts method by iterating over adjacent tasks using zip() instead of index-based loops, which improves readability and reduces indexing logic. Performance remains optimal at O(n log n) due to sorting, and no additional optimization is needed.
+
 ---
 
 ## 3. AI Collaboration
