@@ -4,13 +4,26 @@
 
 **a. Initial design**
 
-- Briefly describe your initial UML design.
+- Three core actions user should be able to perform: 
+    1. Add and manage pet tasks
+    2. View daily care schedule
+    3. Update pet information
+    4. add a pet
+
+- Briefly describe your initial UML design:
+    -The inital UML deisgn classes for Owner, Pet, Scheduler, and task. IT will focus on separating data, task managemetn, and scheduling. 
 - What classes did you include, and what responsibilities did you assign to each?
+    - Owner: includes the pet's owner information like name and availability. 
+    - Pet: includes pet information like name, type, breed, and any special care instructions.
+    - Task: Each task will have the name, duration, priority, and category. 
+    - Scheduler: This will handle generating the daily care plan. It will concider task priority, time constriants, and create a final schedule. 
+    - Task Manager: This will handle adding, remvoing, and updating tasks. 
 
 **b. Design changes**
 
-- Did your design change during implementation?
-- If yes, describe at least one change and why you made it.
+- Did your design change during implementation? If yes, describe at least one change and why you made it.
+    - Yes, I decided not to create task manager and instead have the task as a list associated with the pet. 
+
 
 ---
 
